@@ -8,7 +8,7 @@ import {DomainException} from '@/shared/exceptions';
 export class ListTicketsController implements RestController<Ticket[]> {
   constructor(private readonly crmService: CrmService) {}
 
-  async handle(): Promise<RestResponse<Ticket[]>> {
+  async handle(_req: RestRequest): Promise<RestResponse<Ticket[]>> {
     return {status: HttpStatus.OK, content: this.crmService.listTickets()};
   }
 }
