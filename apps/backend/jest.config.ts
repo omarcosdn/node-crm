@@ -1,9 +1,10 @@
 import {JestConfigWithTsJest} from 'ts-jest';
 
 const config: JestConfigWithTsJest = {
+  rootDir: __dirname,
   preset: 'ts-jest',
   testEnvironment: 'node',
-  testPathIgnorePatterns: ['/node_modules/', 'out/'],
+  testPathIgnorePatterns: ['/node_modules/', '/out/'],
   moduleNameMapper: {
     '@/core/(.*)': '<rootDir>/src/core/$1',
     '@/infrastructure/(.*)': '<rootDir>/src/infrastructure/$1',

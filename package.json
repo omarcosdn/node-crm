@@ -1,53 +1,19 @@
 {
-  "name": "nodejs-template",
+  "name": "node-crm-monorepo",
   "version": "1.0.0",
-  "main": "index.ts",
-  "license": "MIT",
+  "private": true,
+  "packageManager": "yarn@4.10.3",
+  "workspaces": [
+    "apps/backend",
+    "apps/frontend"
+  ],
   "scripts": {
-    "clean": "rimraf out && rimraf coverage",
-    "build": "tsc",
-    "start": "node -r tsconfig-paths/register -r ./out/shared/otel/index.js out/main.js",
-    "dev": "ts-node-dev -r tsconfig-paths/register --env-file=.env src/main.ts",
-    "dev:otel": "ts-node-dev -r tsconfig-paths/register --env-file=.env -r ./src/shared/otel/index.ts src/main.ts",
-    "test": "jest --runInBand",
-    "test:coverage": "jest --runInBand --coverage",
-    "format": "prettier --write ."
-  },
-  "dependencies": {
-    "@opentelemetry/api": "^1.9.0",
-    "@opentelemetry/auto-instrumentations-node": "^0.60.1",
-    "@opentelemetry/exporter-logs-otlp-http": "^0.202.0",
-    "@opentelemetry/exporter-metrics-otlp-http": "^0.202.0",
-    "@opentelemetry/exporter-trace-otlp-http": "^0.202.0",
-    "@opentelemetry/resources": "^2.0.1",
-    "@opentelemetry/sdk-logs": "^0.202.0",
-    "@opentelemetry/sdk-metrics": "^2.0.1",
-    "@opentelemetry/sdk-node": "^0.202.0",
-    "body-parser": "^1.20.3",
-    "cors": "^2.8.5",
-    "env-var": "^7.5.0",
-    "express": "^4.21.1",
-    "pg-promise": "^11.10.2",
-    "pino": "^9.5.0",
-    "reflect-metadata": "^0.2.2",
-    "tsconfig-paths": "^4.2.0",
-    "tsyringe": "^4.8.0",
-    "uuid": "^11.0.3",
-    "zod": "^3.23.8"
-  },
-  "devDependencies": {
-    "@types/cors": "^2.8.17",
-    "@types/express": "^5.0.0",
-    "@types/jest": "^29.5.14",
-    "@types/node": "^22.10.0",
-    "@types/uuid": "^10.0.0",
-    "jest": "^29.7.0",
-    "pino-pretty": "^13.0.0",
-    "prettier": "^3.4.1",
-    "rimraf": "^6.0.1",
-    "ts-jest": "^29.2.5",
-    "ts-node-dev": "^2.0.0",
-    "tsarch": "^5.4.0",
-    "typescript": "^5.7.2"
+    "clean": "yarn workspaces foreach -pt run clean",
+    "build": "yarn workspaces foreach -pt run build",
+    "dev": "yarn workspace @node-crm/backend dev",
+    "start": "yarn workspace @node-crm/backend start",
+    "test": "yarn workspaces foreach -pt run test",
+    "test:coverage": "yarn workspace @node-crm/backend test:coverage",
+    "format": "yarn workspaces foreach -pt run format"
   }
 }

@@ -1,2 +1,13 @@
 node_modules
+apps/*/node_modules
+.yarn/install-state.gz
+.yarn/unplugged
+.yarn/build-state.yml
 npm-debug.log
+coverage
+out
+dist
+apps/*/out
+apps/*/dist
+.env
+apps/*/.env

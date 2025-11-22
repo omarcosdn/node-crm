@@ -1,3 +1,5 @@
+version: '3.9'
+
 volumes:
   lgtm_data:
 
@@ -9,18 +11,18 @@ services:
   otel_lgtm:
     image: grafana/otel-lgtm:latest
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:3000/" ]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 20s
     ports:
-      - "3000:3000"   # Grafana
-      - "4317:4317"   # OTLP gRPC
-      - "4318:4318"   # OTLP HTTP
-      - "3100:3100"   # Loki API
-      - "3200:3200"   # Tempo API
-      - "9009:9009"   # Mimir API
+      - "3000:3000"
+      - "4317:4317"
+      - "4318:4318"
+      - "3100:3100"
+      - "3200:3200"
+      - "9009:9009"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_FEATURE_TOGGLES_ENABLE=traceqlSearch
@@ -29,24 +31,41 @@ services:
     networks:
       - app_network
 
-  app:
+  backend:
     build:
       context: .
       dockerfile: Dockerfile.dev
+    command: yarn workspace @node-crm/backend dev
     ports:
       - "4000:4000"
     environment:
       - SERVER_PORT=4000
+      - SERVER_BASE_ROUTE=/api/template-service
       - OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://otel_lgtm:4318/v1/logs
       - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://otel_lgtm:4318/v1/traces
       - OTEL_EXPORTER_OTLP_METRICS_ENDPOINT=http://otel_lgtm:4318/v1/metrics
     depends_on:
-      - otel_lgtm
+      otel_lgtm:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4000/api/template-service/health"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
+    networks:
+      - app_network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: yarn workspace @node-crm/frontend dev --host 0.0.0.0 --port 5173
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:4000/api/template-service
+    depends_on:
+      - backend
     networks:
       - app_network
