@@ -16,9 +16,9 @@ export enum HttpMethod {
   PUT = 'put',
 }
 
-export interface RestRequest {
-  params: Record<string, string>;
-  body: Record<string, string>;
+export interface RestRequest<TBody = unknown, TParams = Record<string, string>> {
+  params: TParams;
+  body: TBody;
 }
 
 export interface RestResponse<T> {
