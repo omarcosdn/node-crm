@@ -1,0 +1,52 @@
+volumes:
+  lgtm_data:
+
+networks:
+  app_network:
+    driver: bridge
+
+services:
+  otel_lgtm:
+    image: grafana/otel-lgtm:latest
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    ports:
+      - "3000:3000"   # Grafana
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "3100:3100"   # Loki API
+      - "3200:3200"   # Tempo API
+      - "9009:9009"   # Mimir API
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_FEATURE_TOGGLES_ENABLE=traceqlSearch
+    volumes:
+      - lgtm_data:/var/lib/grafana
+    networks:
+      - app_network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "4000:4000"
+    environment:
+      - SERVER_PORT=4000
+      - OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://otel_lgtm:4318/v1/logs
+      - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://otel_lgtm:4318/v1/traces
+      - OTEL_EXPORTER_OTLP_METRICS_ENDPOINT=http://otel_lgtm:4318/v1/metrics
+    depends_on:
+      - otel_lgtm
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/api/template-service/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - app_network
