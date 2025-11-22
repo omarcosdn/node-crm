@@ -4,7 +4,7 @@ import packageJson from '../../../package.json'
 export const Env = {
   APP_NAME: packageJson.name,
   APP_VERSION: packageJson.version,
-  SERVER_BASE_ROUTE: '/api/template-service',
+  SERVER_BASE_ROUTE: '/api',
   NODE_ENV: env.get('NODE_ENV').required().asString(),
   OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: env.get('OTEL_EXPORTER_OTLP_TRACES_ENDPOINT').required().asString(),
   OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: env.get('OTEL_EXPORTER_OTLP_METRICS_ENDPOINT').required().asString(),
