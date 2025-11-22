@@ -1,43 +1,43 @@
 # ----------------------
-# Stage 1: Build
+# Base
 # ----------------------
-FROM node:20-alpine AS build
+FROM node:20-alpine AS base
 
 WORKDIR /usr/src/app
 
-# Copia apenas package.json e yarn.lock primeiro (melhora cache)
-COPY package.json yarn.lock ./
+COPY package.json yarn.lock .yarnrc.yml ./
+COPY .yarn ./.yarn
+COPY apps/backend/package.json apps/backend/package.json
+COPY apps/frontend/package.json apps/frontend/package.json
 
-# Instala todas dependências (prod + dev)
-RUN yarn install
-
-# Copia o restante do código
-COPY . .
-
-# Compila o projeto
-RUN yarn build
+RUN yarn install --immutable
 
 # ----------------------
-# Stage 2: Production
+# Build
+# ----------------------
+FROM base AS build
+
+COPY . .
+RUN yarn workspace @node-crm/backend build
+
+# ----------------------
+# Production runtime
 # ----------------------
 FROM node:20-alpine AS prod
 
 WORKDIR /usr/src/app
-
 ENV NODE_ENV=production
 
-# Copia apenas arquivos necessários
-COPY package.json yarn.lock tsconfig.json ./
+COPY package.json yarn.lock .yarnrc.yml ./
+COPY .yarn ./.yarn
+COPY apps/backend/package.json apps/backend/package.json
+COPY apps/frontend/package.json apps/frontend/package.json
 
-# Instala só dependências de produção
-RUN yarn install --production
+RUN yarn workspaces focus @node-crm/backend --production
 
-# Copia build do estágio anterior
-COPY --from=build /usr/src/app/out ./out
-
-# Se tiver algum arquivo de config que queira copiar, por exemplo:
-# COPY .env .env
+COPY --from=build /usr/src/app/apps/backend/out ./apps/backend/out
+COPY --from=build /usr/src/app/apps/backend/package.json ./apps/backend/package.json
 
 EXPOSE 4000
 
-CMD ["yarn", "start"]
+CMD ["yarn", "workspace", "@node-crm/backend", "start"]

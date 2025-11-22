@@ -1,150 +1,74 @@
-[![Coverage Lines](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/omarcosdn/nodejs-template/blob/main/.coverage/coverage-badge.json&label=lines&query=$.total.lines.pct)](https://github.com/omarcosdn/nodejs-template/tree/main)
-[![Coverage Functions](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/omarcosdn/nodejs-template/main/.coverage/coverage-badge.json&label=functions&query=$.total.functions.pct)](https://github.com/omarcosdn/nodejs-template/tree/main)
-[![Coverage Statements](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/omarcosdn/nodejs-template/main/.coverage/coverage-badge.json&label=statements&query=$.total.statements.pct)](https://github.com/omarcosdn/nodejs-template/tree/main)
-[![Coverage Branches](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/omarcosdn/nodejs-template/main/.coverage/coverage-badge.json&label=branches&query=$.total.branches.pct)](https://github.com/omarcosdn/nodejs-template/tree/main)
+# Node CRM Monorepo
 
-# Node.js Template Project
+Monorepo para um CRM com **backend** em Node.js/TypeScript e **frontend** em React. A organização privilegia **Clean Code**, **DDD** e **SOLID**, separando responsabilidades por aplicação e camadas para facilitar evolução e testes.
 
-Este repositório é um template para projetos Node.js. Ele segue boas práticas de desenvolvimento, utilizando conceitos como **Clean Architecture**, **DDD (Domain-Driven Design)** e estrutura modular.
+## 📂 Estrutura
 
----
-
-## 🌳 Estrutura do Projeto
-
-```plaintext
+```
 .
-├── src/
-│   ├── core/                # Entidades, agregados, objetos de valor, casos de uso, lógica de aplicação, interfaces de repositório
-│   ├── infrastructure/      # Implementações concretas (ORM, API externas, etc.)
-│   │   ├── database/        # Configurações de banco de dados (Migrations, Seeds, etc.)
-│   │   ├── http/            # Controllers e middlewares do Express
-│   │   ├── rabbitmq/        # Configuração e consumidores RabbitMQ
-│   ├── shared/              # Código compartilhado (Utils, Providers, Errors)
-│   └── main.ts              # Arquivo principal de inicialização da aplicação
-├── .env.example             # Exemplo de variáveis de ambiente
-├── Dockerfile               # Arquivo Docker para o projeto
-├── docker-compose.yml       # Configuração para subir containers (Postgres, RabbitMQ, etc.)
-├── README.md                # Documentação inicial do projeto
+├── apps
+│   ├── backend/            # API Express com casos de uso, gateways e testes de arquitetura
+│   └── frontend/           # SPA React (Vite) para consumir a API
+├── Dockerfile*             # Imagens de produção e desenvolvimento focadas em workspaces
+├── docker-compose.yaml     # Sobe observabilidade (Grafana OTEL), backend e frontend
+├── package.json            # Scripts orquestrados por workspaces
+└── yarn.lock
 ```
 
----
+### Backend (DDD)
+- **core/**: entidades, objetos de valor, casos de uso e contratos de repositório/gateway.
+- **infrastructure/**: adaptações para HTTP, banco e observabilidade.
+- **arch/**: testes de arquitetura garantindo isolamento entre camadas.
 
-## 🛠️ Configurações Essenciais
+### Frontend
+- React + Vite com build independente e estilos simples para validar a camada visual.
 
-### 1. **Instalação de Dependências**
+## 🚀 Como rodar
 
+1. Instale dependências (raiz):
+   ```bash
+   yarn install
+   ```
+
+2. Desenvolvimento:
+   ```bash
+   # API
+   yarn workspace @node-crm/backend dev
+
+   # Frontend
+   yarn workspace @node-crm/frontend dev --host
+   ```
+
+3. Build e testes:
+   ```bash
+   yarn build                # executa build em todos os workspaces
+   yarn workspace @node-crm/backend test
+   yarn workspace @node-crm/backend test:coverage
+   ```
+
+4. Formatação (todos os pacotes):
+   ```bash
+   yarn format
+   ```
+
+## 🐳 Docker
+
+Build de produção (API):
 ```bash
-yarn install
-# ou
-npm install
+docker build -t node-crm-backend:prod .
+docker run --env-file apps/backend/.env -p 4000:4000 node-crm-backend:prod
 ```
 
-### 2. **Configuração de Variáveis de Ambiente**
-
-Crie um arquivo `.env` na raiz do projeto com base no `.env.example`:
-
+Ambiente completo com observabilidade e front:
 ```bash
-cp .env.example .env
+docker compose up --build
 ```
+- Backend: http://localhost:4000/api/template-service/health
+- Frontend: http://localhost:5173
+- Grafana (OTEL LGTM): http://localhost:3000
 
-Edite o `.env` conforme necessário para seu ambiente.
-
-### 3. **Scripts Disponíveis**
-
-Veja os scripts principais no `package.json`:
-
-- `yarn dev`: Executa a aplicação em modo desenvolvimento (hot reload)
-- `yarn build`: Transpila o projeto para JavaScript
-- `yarn start`: Executa a aplicação em produção
-- `yarn test`: Executa todos os testes
-- `yarn test:coverage`: Gera relatório de cobertura
-- `yarn format`: Formata o código com Prettier
-
----
-
-## 🐳 Buildando e Executando com Docker
-
-### 1. **Build e execução do ambiente de produção**
-
-Utiliza o `Dockerfile` padrão, que gera uma imagem enxuta apenas com dependências de produção e o código transpilado.
-
-```bash
-# Build da imagem de produção
-# (usa o Dockerfile padrão)
-docker build -t nodejs-template:prod .
-
-# Executa o container de produção
-# (usa as variáveis do .env, expõe a porta 4000)
-docker run --env-file .env -p 4000:4000 nodejs-template:prod
-```
-
-### 2. **Build e execução do ambiente de desenvolvimento**
-
-Utiliza o `Dockerfile.dev`, que instala todas as dependências (incluindo dev), compila o projeto e roda em modo development.
-
-```bash
-# Build da imagem de desenvolvimento
-# (usa o Dockerfile.dev)
-docker build -f Dockerfile.dev -t nodejs-template:dev .
-
-# Executa o container de desenvolvimento
-# (usa as variáveis do .env, expõe a porta 4000)
-docker run --env-file .env -p 4000:4000 nodejs-template:dev
-```
-
-> **Dica:** Use o Docker Compose para orquestrar múltiplos serviços e facilitar o desenvolvimento local.
-
----
-
-## ▶️ Executando Localmente
-
-### 1. **Modo Desenvolvimento**
-
-```bash
-yarn dev
-```
-
-### 2. **Modo Produção**
-
-```bash
-yarn build
-yarn start
-```
-
-### 3. **Executando Testes**
-
-```bash
-yarn test
-# ou
-yarn test:coverage
-```
-
----
-
-## 🧪 Rodando Testes dentro do Container (Opcional)
-
-Se desejar rodar os testes dentro do container:
-
-```bash
-docker run nodejs-template:latest yarn test
-```
-
----
-
-## 🛠️ Troubleshooting
-
-- Certifique-se de que as portas necessárias (ex: 4000) estejam livres.
-- Verifique se o arquivo `.env` está corretamente configurado.
-- Para logs detalhados, consulte a saída do container ou utilize `docker logs <container_id>`.
-
----
-
-## 🔧 Tecnologias Utilizadas
-
-- **Node.js**
-- **TypeScript**
-- **Express.js**
-- **Jest**
-- **Docker**
-
----
+## 🔧 Princípios adotados
+- **Clean Code/SOLID**: separação de responsabilidades, dependências invertidas via contratos e injeção de dependência.
+- **DDD**: domínio modelado em `core/` com regras e casos de uso independentes de infraestrutura.
+- **Observabilidade**: instrumentação OpenTelemetry habilitada no backend.
+- **Monorepo**: workspaces isolam build/test de cada app, mantendo scripts consistentes.
