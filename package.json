@@ -8,12 +8,12 @@
     "apps/frontend"
   ],
   "scripts": {
-    "clean": "yarn workspaces foreach -pt run clean",
-    "build": "yarn workspaces foreach -pt run build",
+    "clean": "yarn workspaces foreach -Apt run clean",
+    "build": "yarn workspaces foreach -Apt run build",
     "dev": "yarn workspace @node-crm/backend dev",
     "start": "yarn workspace @node-crm/backend start",
-    "test": "yarn workspaces foreach -pt run test",
+    "test": "yarn workspaces foreach -Apt run test",
     "test:coverage": "yarn workspace @node-crm/backend test:coverage",
-    "format": "yarn workspaces foreach -pt run format"
+    "format": "yarn workspaces foreach -Apt run format"
   }
 }
