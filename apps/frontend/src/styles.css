@@ -22,6 +22,7 @@ body {
   top: 0;
   align-self: start;
   display: grid;
+  align-content: start;
   gap: 18px;
   padding: 20px 18px;
   width: 240px;
@@ -32,10 +33,28 @@ body {
   transition: width 180ms ease, padding 180ms ease;
 }
 
-.sidebar .brand {
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-text {
+  display: grid;
+  gap: 2px;
+}
+
+.brand-title {
+  display: block;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.brand-subtitle {
+  display: block;
+  color: rgba(232, 255, 243, 0.8);
+  font-size: 12px;
 }
 
 .brand-mark {
@@ -53,6 +72,9 @@ body {
 }
 
 .sidebar .menu a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   color: inherit;
   text-decoration: none;
   font-weight: 700;
@@ -68,6 +90,21 @@ body {
   transform: translateX(2px);
 }
 
+.menu-icon {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  font-size: 16px;
+}
+
+.menu-label {
+  white-space: nowrap;
+}
+
 .hamburger {
   background: rgba(255, 255, 255, 0.08);
   color: inherit;
@@ -80,15 +117,17 @@ body {
 }
 
 .sidebar.is-collapsed {
-  width: 74px;
+  width: 92px;
   padding-inline: 14px;
 }
 
-.sidebar.is-collapsed .brand,
-.sidebar.is-collapsed .menu {
-  opacity: 0;
-  pointer-events: none;
-  height: 0;
+.sidebar.is-collapsed .brand-text,
+.sidebar.is-collapsed .menu-label {
+  display: none;
+}
+
+.sidebar.is-collapsed .menu a {
+  justify-content: center;
 }
 
 main.page {
