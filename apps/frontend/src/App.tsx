@@ -3,6 +3,14 @@ import './styles.css';
 
 const API_BASE = '/api';
 
+const navigationLinks = [
+  {label: 'Principal', href: '#dashboard', icon: '🏠'},
+  {label: 'Clientes', href: '#clientes', icon: '👥'},
+  {label: 'Tickets', href: '#tickets', icon: '🎟️'},
+  {label: 'Relatórios', href: '#relatorios', icon: '📊'},
+  {label: 'Configurações', href: '#configuracoes', icon: '⚙️'},
+];
+
 type MetricSlice = {
   label: string;
   value: number;
@@ -92,10 +100,23 @@ const App: React.FC = () => {
         >
           ☰
         </button>
-        <div className="brand-mark" aria-hidden />
-        <div className="menu">
-          <a href="#dashboard">Principal</a>
+        <div className="brand">
+          <div className="brand-mark" aria-hidden />
+          <div className="brand-text" aria-label="CRM Nova">
+            <span className="brand-title">Nova CRM</span>
+            <span className="brand-subtitle">Painel</span>
+          </div>
         </div>
+        <nav className="menu" aria-label="Navegação principal">
+          {navigationLinks.map((item) => (
+            <a key={item.label} href={item.href}>
+              <span className="menu-icon" aria-hidden>
+                {item.icon}
+              </span>
+              <span className="menu-label">{item.label}</span>
+            </a>
+          ))}
+        </nav>
       </aside>
 
       <main className="page" id="dashboard">
@@ -142,6 +163,24 @@ const App: React.FC = () => {
             </Card>
           </section>
         )}
+
+        <section className="grid two-cols secondary-grid">
+          <Card id="clientes" title="Clientes" subtitle="Perfil e informações de contato">
+            <p>Consulte dados essenciais de cada cliente, histórico de relacionamento e principais contatos.</p>
+          </Card>
+
+          <Card id="tickets" title="Tickets" subtitle="Central de atendimento">
+            <p>Acompanhe o andamento dos chamados, priorize filas e revise SLAs ativos para manter o nível de serviço.</p>
+          </Card>
+
+          <Card id="relatorios" title="Relatórios" subtitle="Visão analítica">
+            <p>Visualize dashboards consolidados e exporte indicadores para compartilhar com o time de operações.</p>
+          </Card>
+
+          <Card id="configuracoes" title="Configurações" subtitle="Administração do CRM">
+            <p>Gerencie usuários, permissões, integrações e preferências gerais do ambiente.</p>
+          </Card>
+        </section>
       </main>
     </div>
   );
