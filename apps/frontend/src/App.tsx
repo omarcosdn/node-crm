@@ -44,6 +44,9 @@ type DashboardMetrics = {
   backlog: MetricSlice[];
 };
 
+type CustomerForm = Omit<Customer, 'id' | 'lastContact'>;
+type TicketForm = Omit<Ticket, 'id' | 'createdAt' | 'resolvedAt'>;
+
 async function fetchFromApi<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     headers: {'Content-Type': 'application/json', ...(options?.headers ?? {})},
@@ -74,9 +77,9 @@ function ProgressBar({label, value, highlight}: {label: string; value: number; h
   );
 }
 
-function Card({title, subtitle, children}: {title: string; subtitle?: string; children: React.ReactNode}) {
+function Card({title, subtitle, children, id}: {title: string; subtitle?: string; children: React.ReactNode; id?: string}) {
   return (
-    <article className="card">
+    <article className="card" id={id}>
       <header className="card-header">
         <div>
           <p className="eyebrow">{subtitle}</p>
@@ -88,7 +91,7 @@ function Card({title, subtitle, children}: {title: string; subtitle?: string; ch
   );
 }
 
-const initialCustomer = {
+const initialCustomer: CustomerForm = {
   name: '',
   company: '',
   email: '',
@@ -98,7 +101,7 @@ const initialCustomer = {
   notes: '',
 };
 
-const initialTicket = {
+const initialTicket: TicketForm = {
   customerId: '',
   subject: '',
   priority: 'medium' as const,
@@ -114,8 +117,8 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const [customerForm, setCustomerForm] = useState(initialCustomer);
-  const [ticketForm, setTicketForm] = useState(initialTicket);
+  const [customerForm, setCustomerForm] = useState<CustomerForm>(initialCustomer);
+  const [ticketForm, setTicketForm] = useState<TicketForm>(initialTicket);
 
   const openTickets = useMemo(() => tickets.filter((ticket) => ticket.status !== 'resolved'), [tickets]);
 
@@ -176,271 +179,282 @@ const App: React.FC = () => {
   };
 
   return (
-    <main className="page">
-      <header className="hero">
-        <div>
-          <p className="eyebrow">Node CRM</p>
-          <h1>CRM full-stack pronto para pilotar relacionamento.</h1>
-          <p className="lede">
-            Monitore satisfação, atrasos de SLA e backlog de tickets em um painel unificado com API dedicada.
-          </p>
-          <div className="cta-group">
-            <button className="button primary" onClick={loadData} disabled={loading}>
-              {loading ? 'Sincronizando...' : 'Atualizar dados'}
-            </button>
-            <a className="button ghost" href="/api/health" target="_blank" rel="noreferrer">
-              API Healthcheck
-            </a>
-          </div>
-          {error && <p className="error">{error}</p>}
+    <>
+      <nav className="topbar">
+        <div className="brand">Node CRM</div>
+        <div className="menu">
+          <a href="#dashboard">Principal</a>
+          <a href="#cadastrar-cliente">Cadastrar cliente</a>
+          <a href="#cadastrar-ticket">Cadastrar ticket</a>
         </div>
-        {metrics && (
-          <div className="hero-panel">
-            <p className="eyebrow">KPIs em destaque</p>
-            <div className="kpi-grid">
-              <div>
-                <span className="kpi-value">{metrics.kpis.averageSatisfaction}</span>
-                <p className="kpi-label">Satisfação média</p>
-              </div>
-              <div>
-                <span className="kpi-value">{metrics.kpis.openTickets}%</span>
-                <p className="kpi-label">Tickets em aberto</p>
-              </div>
-              <div>
-                <span className="kpi-value">{metrics.kpis.delayedTickets}</span>
-                <p className="kpi-label">Atrasos</p>
-              </div>
-              <div>
-                <span className="kpi-value">{metrics.kpis.resolutionRate}%</span>
-                <p className="kpi-label">Taxa de resolução</p>
-              </div>
-            </div>
-          </div>
-        )}
-      </header>
+      </nav>
 
-      <section className="grid two-cols">
-        <Card title="Clientes ativos" subtitle="Visão de relacionamento">
-          <div className="table">
-            <div className="table-head">
-              <span>Cliente</span>
-              <span>Status</span>
-              <span>Satisfação</span>
-              <span>Último contato</span>
+      <main className="page" id="dashboard">
+        <header className="hero">
+          <div>
+            <p className="eyebrow">Node CRM</p>
+            <h1>CRM full-stack pronto para pilotar relacionamento.</h1>
+            <p className="lede">
+              Monitore satisfação, atrasos de SLA e backlog de tickets em um painel unificado com API dedicada.
+            </p>
+            <div className="cta-group">
+              <button className="button primary" onClick={loadData} disabled={loading}>
+                {loading ? 'Sincronizando...' : 'Atualizar dados'}
+              </button>
+              <a className="button ghost" href="/api/health" target="_blank" rel="noreferrer">
+                API Healthcheck
+              </a>
             </div>
-            {customers.map((customer) => (
-              <div key={customer.id} className="table-row">
+            {error && <p className="error">{error}</p>}
+          </div>
+          {metrics && (
+            <div className="hero-panel">
+              <p className="eyebrow">KPIs em destaque</p>
+              <div className="kpi-grid">
                 <div>
-                  <p className="strong">{customer.name}</p>
-                  <p className="muted">{customer.company}</p>
+                  <span className="kpi-value">{metrics.kpis.averageSatisfaction}</span>
+                  <p className="kpi-label">Satisfação média</p>
                 </div>
-                <span className={`pill pill-${customer.status}`}>{customer.status}</span>
-                <span className="strong">{customer.satisfaction.toFixed(1)}</span>
-                <span className="muted">{formatDate(customer.lastContact)}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        <Card title="Tickets em atendimento" subtitle="Controle de SLA">
-          <div className="table">
-            <div className="table-head">
-              <span>Assunto</span>
-              <span>Prioridade</span>
-              <span>Status</span>
-              <span>Criado em</span>
-            </div>
-            {openTickets.map((ticket) => (
-              <div key={ticket.id} className="table-row">
                 <div>
-                  <p className="strong">{ticket.subject}</p>
-                  <p className="muted">{ticket.channel.toUpperCase()}</p>
+                  <span className="kpi-value">{metrics.kpis.openTickets}%</span>
+                  <p className="kpi-label">Tickets em aberto</p>
                 </div>
-                <span className={`pill pill-${ticket.priority}`}>{ticket.priority}</span>
-                <span className={`pill pill-${ticket.status}`}>{ticket.status}</span>
-                <span className="muted">{formatDate(ticket.createdAt)}</span>
+                <div>
+                  <span className="kpi-value">{metrics.kpis.delayedTickets}</span>
+                  <p className="kpi-label">Atrasos</p>
+                </div>
+                <div>
+                  <span className="kpi-value">{metrics.kpis.resolutionRate}%</span>
+                  <p className="kpi-label">Taxa de resolução</p>
+                </div>
               </div>
-            ))}
-          </div>
-        </Card>
-      </section>
+            </div>
+          )}
+        </header>
 
-      {metrics && (
-        <section className="grid three-cols">
-          <Card title="Satisfação do cliente" subtitle="Distribuição de sentimento">
-            {metrics.satisfactionBreakdown.map((slice) => (
-              <ProgressBar key={slice.label} label={slice.label} value={slice.value} highlight={slice.label === 'Promotores'} />
-            ))}
+        <section className="grid two-cols">
+          <Card title="Clientes ativos" subtitle="Visão de relacionamento">
+            <div className="table">
+              <div className="table-head">
+                <span>Cliente</span>
+                <span>Status</span>
+                <span>Satisfação</span>
+                <span>Último contato</span>
+              </div>
+              {customers.map((customer) => (
+                <div key={customer.id} className="table-row">
+                  <div>
+                    <p className="strong">{customer.name}</p>
+                    <p className="muted">{customer.company}</p>
+                  </div>
+                  <span className={`pill pill-${customer.status}`}>{customer.status}</span>
+                  <span className="strong">{customer.satisfaction.toFixed(1)}</span>
+                  <span className="muted">{formatDate(customer.lastContact)}</span>
+                </div>
+              ))}
+            </div>
           </Card>
 
-          <Card title="Performance de SLA" subtitle="Atrasos vs dentro do prazo">
-            {metrics.slaPerformance.map((slice) => (
-              <ProgressBar key={slice.label} label={slice.label} value={slice.value} highlight={slice.label === 'Dentro do SLA'} />
-            ))}
-          </Card>
-
-          <Card title="Backlog" subtitle="Participação por estágio">
-            {metrics.backlog.map((slice) => (
-              <ProgressBar key={slice.label} label={slice.label} value={slice.value} highlight={slice.label === 'Resolvidos'} />
-            ))}
+          <Card title="Tickets em atendimento" subtitle="Controle de SLA">
+            <div className="table">
+              <div className="table-head">
+                <span>Assunto</span>
+                <span>Prioridade</span>
+                <span>Status</span>
+                <span>Criado em</span>
+              </div>
+              {openTickets.map((ticket) => (
+                <div key={ticket.id} className="table-row">
+                  <div>
+                    <p className="strong">{ticket.subject}</p>
+                    <p className="muted">{ticket.channel.toUpperCase()}</p>
+                  </div>
+                  <span className={`pill pill-${ticket.priority}`}>{ticket.priority}</span>
+                  <span className={`pill pill-${ticket.status}`}>{ticket.status}</span>
+                  <span className="muted">{formatDate(ticket.createdAt)}</span>
+                </div>
+              ))}
+            </div>
           </Card>
         </section>
-      )}
 
-      <section className="grid two-cols">
-        <Card title="Adicionar cliente" subtitle="Cadastro rápido">
-          <form className="form" onSubmit={handleCustomerSubmit}>
-            <label>
-              Nome completo
-              <input
-                required
-                value={customerForm.name}
-                onChange={(e) => setCustomerForm({...customerForm, name: e.target.value})}
-                placeholder="Ex: Ana Souza"
-              />
-            </label>
-            <label>
-              Empresa
-              <input
-                required
-                value={customerForm.company}
-                onChange={(e) => setCustomerForm({...customerForm, company: e.target.value})}
-                placeholder="Ex: TechGrow"
-              />
-            </label>
-            <label>
-              Email
-              <input
-                required
-                type="email"
-                value={customerForm.email}
-                onChange={(e) => setCustomerForm({...customerForm, email: e.target.value})}
-                placeholder="cliente@empresa.com"
-              />
-            </label>
-            <div className="form-grid">
+        {metrics && (
+          <section className="grid three-cols">
+            <Card title="Satisfação do cliente" subtitle="Distribuição de sentimento">
+              {metrics.satisfactionBreakdown.map((slice) => (
+                <ProgressBar key={slice.label} label={slice.label} value={slice.value} highlight={slice.label === 'Promotores'} />
+              ))}
+            </Card>
+
+            <Card title="Performance de SLA" subtitle="Atrasos vs dentro do prazo">
+              {metrics.slaPerformance.map((slice) => (
+                <ProgressBar key={slice.label} label={slice.label} value={slice.value} highlight={slice.label === 'Dentro do SLA'} />
+              ))}
+            </Card>
+
+            <Card title="Backlog" subtitle="Participação por estágio">
+              {metrics.backlog.map((slice) => (
+                <ProgressBar key={slice.label} label={slice.label} value={slice.value} highlight={slice.label === 'Resolvidos'} />
+              ))}
+            </Card>
+          </section>
+        )}
+
+        <section className="grid two-cols" id="cadastrar-cliente">
+          <Card title="Adicionar cliente" subtitle="Cadastro rápido">
+            <form className="form" onSubmit={handleCustomerSubmit}>
               <label>
-                Segmento
-                <select
-                  value={customerForm.segment}
-                  onChange={(e) => setCustomerForm({...customerForm, segment: e.target.value as Customer['segment']})}
-                >
-                  <option value="smb">SMB</option>
-                  <option value="scale-up">Scale-up</option>
-                  <option value="enterprise">Enterprise</option>
-                </select>
-              </label>
-              <label>
-                Status
-                <select
-                  value={customerForm.status}
-                  onChange={(e) => setCustomerForm({...customerForm, status: e.target.value as Customer['status']})}
-                >
-                  <option value="onboarding">Onboarding</option>
-                  <option value="active">Ativo</option>
-                  <option value="churn-risk">Risco de churn</option>
-                </select>
-              </label>
-              <label>
-                Satisfação
+                Nome completo
                 <input
-                  type="number"
-                  min={0}
-                  max={5}
-                  step={0.1}
-                  value={customerForm.satisfaction}
-                  onChange={(e) => setCustomerForm({...customerForm, satisfaction: Number(e.target.value)})}
+                  required
+                  value={customerForm.name}
+                  onChange={(e) => setCustomerForm({...customerForm, name: e.target.value})}
+                  placeholder="Ex: Ana Souza"
                 />
               </label>
-            </div>
-            <label>
-              Observações
-              <textarea
-                value={customerForm.notes}
-                onChange={(e) => setCustomerForm({...customerForm, notes: e.target.value})}
-                placeholder="Preferências, riscos, próximos passos"
-              />
-            </label>
-            <button className="button primary" type="submit" disabled={loading}>
-              Registrar cliente
-            </button>
-          </form>
-        </Card>
-
-        <Card title="Registrar ticket" subtitle="Controle imediato de demandas">
-          <form className="form" onSubmit={handleTicketSubmit}>
-            <label>
-              Cliente
-              <select
-                required
-                value={ticketForm.customerId}
-                onChange={(e) => setTicketForm({...ticketForm, customerId: e.target.value})}
-              >
-                <option value="">Selecione um cliente</option>
-                {customers.map((customer) => (
-                  <option key={customer.id} value={customer.id}>
-                    {customer.name} — {customer.company}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Assunto
-              <input
-                required
-                value={ticketForm.subject}
-                onChange={(e) => setTicketForm({...ticketForm, subject: e.target.value})}
-                placeholder="Descreva a demanda"
-              />
-            </label>
-            <div className="form-grid">
               <label>
-                Prioridade
-                <select
-                  value={ticketForm.priority}
-                  onChange={(e) => setTicketForm({...ticketForm, priority: e.target.value as Ticket['priority']})}
-                >
-                  <option value="low">Baixa</option>
-                  <option value="medium">Média</option>
-                  <option value="high">Alta</option>
-                </select>
-              </label>
-              <label>
-                Canal
-                <select
-                  value={ticketForm.channel}
-                  onChange={(e) => setTicketForm({...ticketForm, channel: e.target.value as Ticket['channel']})}
-                >
-                  <option value="email">Email</option>
-                  <option value="chat">Chat</option>
-                  <option value="phone">Telefone</option>
-                </select>
-              </label>
-              <label>
-                SLA (horas)
+                Empresa
                 <input
-                  type="number"
-                  min={1}
-                  value={ticketForm.slaHours}
-                  onChange={(e) => setTicketForm({...ticketForm, slaHours: Number(e.target.value)})}
+                  required
+                  value={customerForm.company}
+                  onChange={(e) => setCustomerForm({...customerForm, company: e.target.value})}
+                  placeholder="Ex: TechGrow"
                 />
               </label>
-            </div>
-            <label>
-              Status inicial
-              <select value={ticketForm.status} onChange={(e) => setTicketForm({...ticketForm, status: e.target.value as Ticket['status']})}>
-                <option value="open">Aberto</option>
-                <option value="pending">Em andamento</option>
-                <option value="resolved">Resolvido</option>
-              </select>
-            </label>
-            <button className="button primary" type="submit" disabled={loading}>
-              Criar ticket
-            </button>
-          </form>
-        </Card>
-      </section>
-    </main>
+              <label>
+                Email
+                <input
+                  required
+                  type="email"
+                  value={customerForm.email}
+                  onChange={(e) => setCustomerForm({...customerForm, email: e.target.value})}
+                  placeholder="cliente@empresa.com"
+                />
+              </label>
+              <div className="form-grid">
+                <label>
+                  Segmento
+                  <select
+                    value={customerForm.segment}
+                    onChange={(e) => setCustomerForm({...customerForm, segment: e.target.value as Customer['segment']})}
+                  >
+                    <option value="smb">SMB</option>
+                    <option value="scale-up">Scale-up</option>
+                    <option value="enterprise">Enterprise</option>
+                  </select>
+                </label>
+                <label>
+                  Status
+                  <select
+                    value={customerForm.status}
+                    onChange={(e) => setCustomerForm({...customerForm, status: e.target.value as Customer['status']})}
+                  >
+                    <option value="onboarding">Onboarding</option>
+                    <option value="active">Ativo</option>
+                    <option value="churn-risk">Risco de churn</option>
+                  </select>
+                </label>
+                <label>
+                  Satisfação
+                  <input
+                    type="number"
+                    min={0}
+                    max={5}
+                    step={0.1}
+                    value={customerForm.satisfaction}
+                    onChange={(e) => setCustomerForm({...customerForm, satisfaction: Number(e.target.value)})}
+                  />
+                </label>
+              </div>
+              <label>
+                Observações
+                <textarea
+                  value={customerForm.notes}
+                  onChange={(e) => setCustomerForm({...customerForm, notes: e.target.value})}
+                  placeholder="Preferências, riscos, próximos passos"
+                />
+              </label>
+              <button className="button primary" type="submit" disabled={loading}>
+                Registrar cliente
+              </button>
+            </form>
+          </Card>
+
+          <Card title="Registrar ticket" subtitle="Controle imediato de demandas" id="cadastrar-ticket">
+            <form className="form" onSubmit={handleTicketSubmit}>
+              <label>
+                Cliente
+                <select
+                  required
+                  value={ticketForm.customerId}
+                  onChange={(e) => setTicketForm({...ticketForm, customerId: e.target.value})}
+                >
+                  <option value="">Selecione um cliente</option>
+                  {customers.map((customer) => (
+                    <option key={customer.id} value={customer.id}>
+                      {customer.name} — {customer.company}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Assunto
+                <input
+                  required
+                  value={ticketForm.subject}
+                  onChange={(e) => setTicketForm({...ticketForm, subject: e.target.value})}
+                  placeholder="Descreva a demanda"
+                />
+              </label>
+              <div className="form-grid">
+                <label>
+                  Prioridade
+                  <select
+                    value={ticketForm.priority}
+                    onChange={(e) => setTicketForm({...ticketForm, priority: e.target.value as Ticket['priority']})}
+                  >
+                    <option value="low">Baixa</option>
+                    <option value="medium">Média</option>
+                    <option value="high">Alta</option>
+                  </select>
+                </label>
+                <label>
+                  Canal
+                  <select
+                    value={ticketForm.channel}
+                    onChange={(e) => setTicketForm({...ticketForm, channel: e.target.value as Ticket['channel']})}
+                  >
+                    <option value="email">Email</option>
+                    <option value="chat">Chat</option>
+                    <option value="phone">Telefone</option>
+                  </select>
+                </label>
+                <label>
+                  SLA (horas)
+                  <input
+                    type="number"
+                    min={1}
+                    value={ticketForm.slaHours}
+                    onChange={(e) => setTicketForm({...ticketForm, slaHours: Number(e.target.value)})}
+                  />
+                </label>
+              </div>
+              <label>
+                Status inicial
+                <select value={ticketForm.status} onChange={(e) => setTicketForm({...ticketForm, status: e.target.value as Ticket['status']})}>
+                  <option value="open">Aberto</option>
+                  <option value="pending">Em andamento</option>
+                  <option value="resolved">Resolvido</option>
+                </select>
+              </label>
+              <button className="button primary" type="submit" disabled={loading}>
+                Criar ticket
+              </button>
+            </form>
+          </Card>
+        </section>
+      </main>
+    </>
   );
 };
 
